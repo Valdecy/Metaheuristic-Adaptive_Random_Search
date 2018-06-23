@@ -46,12 +46,12 @@ def step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0]):
     return position_temp
 
 # Function: Large Steps
-def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0], threshold = [0,0], large_step_threshold = 10, factor_1 = 3, factor_2 = 1.5):
+def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0], count = 0, large_step_threshold = 10, factor_1 = 3, factor_2 = 1.5):
     factor = 0
     position_temp = position.copy(deep = True)
     step_size_temp = copy.deepcopy(step_size)
     for i in range(position.shape[0]):
-        if (threshold[i] > 0 and threshold[i] % large_step_threshold == 0):
+        if (count > 0 and count % large_step_threshold == 0):
             factor = factor_1
         else:
             factor = factor_2
@@ -85,7 +85,7 @@ def adaptive_random_search(solutions = 5, min_values = [-5,-5], max_values = [5,
         
         print("Iteration = ", count, " f(x) = ", best_solution[-1])
         position_step = step(position, min_values = min_values, max_values = max_values, step_size = step_size)
-        step_large, position_large_step = large_step(position, min_values = min_values, max_values = max_values, step_size = step_size, threshold = threshold, large_step_threshold = large_step_threshold, factor_1 = factor_1, factor_2 = factor_2)
+        step_large, position_large_step = large_step(position, min_values = min_values, max_values = max_values, step_size = step_size, count = count, large_step_threshold = large_step_threshold, factor_1 = factor_1, factor_2 = factor_2)
         for i in range(position.shape[0]):
             if(position_step.iloc[i,-1] < position.iloc[i,-1] or position_large_step.iloc[i,-1] < position.iloc[i,-1]):
                 if(position_large_step.iloc[i,-1] < position_step.iloc[i,-1]):
@@ -110,7 +110,7 @@ def adaptive_random_search(solutions = 5, min_values = [-5,-5], max_values = [5,
         count = count + 1
         
     print(best_solution)    
-    return best_solution
+    return best_solution, position
 
 ######################## Part 1 - Usage ####################################
 
