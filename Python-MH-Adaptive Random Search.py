@@ -44,7 +44,7 @@ def step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0]):
         position_temp.iloc[i,-1] = target_function(position_temp.iloc[i,0:position_temp.shape[1]-1]) 
     return position_temp
 
-# Function: Large Step
+# Function: Large Steps
 def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0], count = 0, large_step_threshold = 10, factor_1 = 3, factor_2 = 1.5):
     factor = 0
     position_temp = position.copy(deep = True)
@@ -115,13 +115,3 @@ def target_function (variables_values = [0, 0]):
     return func_value
 
 ars = adaptive_random_search(solutions = 15, min_values = [-5,-5], max_values = [5,5], step_size_factor = 0.05, factor_1 = 3, factor_2 = 1.5, iterations = 1000, large_step_threshold = 10, improvement_threshold = 25)
-
-# Function to be Minimized (Rosenbrocks Valley). Solution ->  f(x) = 0; xi = 1
-def target_function(variables_values = [0, 0]):
-    func_value = 0
-    last_x = variables_values[0]
-    for i in range(1, len(variables_values)):
-        func_value = func_value + (100 * math.pow((variables_values[i] - math.pow(last_x, 2)), 2)) + math.pow(1 - last_x, 2)
-    return func_value
-
-ars = adaptive_random_search(solutions = 25, min_values = [-5,-5,-5,-5], max_values = [5,5,5,5], step_size_factor = 0.05, factor_1 = 3, factor_2 = 1.5, iterations = 5000, large_step_threshold = 10, improvement_threshold = 25)
