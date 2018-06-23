@@ -111,7 +111,7 @@ def adaptive_random_search(solutions = 5, min_values = [-5,-5], max_values = [5,
         count = count + 1
         
     print(best_solution)    
-    return best_solution, position
+    return best_solution
 
 ######################## Part 1 - Usage ####################################
 
