@@ -77,7 +77,6 @@ def adaptive_random_search(solutions = 5, min_values = [-5,-5], max_values = [5,
     position = initial_position(solutions = solutions, min_values = min_values, max_values = max_values)
     best_solution = position.iloc[position['Fitness'].idxmin(),:]
     step_size = []
-    #step_size = [0]*len(min_values)
     for i in range(0, position.shape[0]):
         step_size.append([0]*len(min_values))
         for j in range(0, len(min_values)):
