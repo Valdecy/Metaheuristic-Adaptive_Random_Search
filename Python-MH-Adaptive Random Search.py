@@ -15,6 +15,7 @@
 import pandas as pd
 import numpy  as np
 import math
+import copy
 import random
 import os
 
@@ -33,8 +34,8 @@ def step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0]):
     position_temp = position.copy(deep = True)
     for i in range(position.shape[0]):
         for j in range(position.shape[1]-1):
-            minimun = min(min_values[j], position.iloc[i,j] + step_size[j])
-            maximum = max(max_values[j], position.iloc[i,j] - step_size[j])
+            minimun = min(min_values[j], position.iloc[i,j] + step_size[i][j])
+            maximum = max(max_values[j], position.iloc[i,j] - step_size[i][j])
             rand = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
             position_temp.iloc[i,j] = minimun + (maximum- minimun)*rand
             if (position_temp.iloc[i,j] > max_values[j]):
@@ -45,20 +46,21 @@ def step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0]):
     return position_temp
 
 # Function: Large Steps
-def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0], count = 0, large_step_threshold = 10, factor_1 = 3, factor_2 = 1.5):
+def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0], threshold = [0,0], large_step_threshold = 10, factor_1 = 3, factor_2 = 1.5):
     factor = 0
     position_temp = position.copy(deep = True)
-    step_size_temp = [0]*len(min_values)
-    if (count > 0 and count % large_step_threshold == 0):
-        factor = factor_1
-    else:
-        factor = factor_2
-    for j in range(0, len(min_values)):
-        step_size[j] = step_size[j]*factor
+    step_size_temp = copy.deepcopy(step_size)
+    for i in range(position.shape[0]):
+        if (threshold[i] > 0 and threshold[i] % large_step_threshold == 0):
+            factor = factor_1
+        else:
+            factor = factor_2
+        for j in range(0, len(min_values)):
+            step_size_temp[i][j] = step_size[i][j]*factor
     for i in range(position.shape[0]):
         for j in range(position.shape[1]-1):
-            minimun = min(min_values[j], position.iloc[i,j] + step_size_temp[j])
-            maximum = max(max_values[j], position.iloc[i,j] - step_size_temp[j])
+            minimun = min(min_values[j], position.iloc[i,j] + step_size_temp[i][j])
+            maximum = max(max_values[j], position.iloc[i,j] - step_size_temp[i][j])
             rand = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
             position_temp .iloc[i,j] = minimun + (maximum- minimun)*rand
             if (position_temp .iloc[i,j] > max_values[j]):
@@ -71,34 +73,37 @@ def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [
 # ARS Function
 def adaptive_random_search(solutions = 5, min_values = [-5,-5], max_values = [5,5], step_size_factor = 0.05, factor_1 = 3, factor_2 = 1.5, iterations = 50, large_step_threshold = 10, improvement_threshold = 25):    
     count = 0
-    threshold = 0
+    threshold = [0]*solutions
     position = initial_position(solutions = solutions, min_values = min_values, max_values = max_values)
     best_solution = position.iloc[position['Fitness'].idxmin(),:]
-    step_size = [0]*len(min_values)
-    for j in range(0, len(min_values)):
-        step_size[j] = (max_values[j] - min_values[j])*step_size_factor
+    step_size = []
+    #step_size = [0]*len(min_values)
+    for i in range(0, position.shape[0]):
+        step_size.append([0]*len(min_values))
+        for j in range(0, len(min_values)):
+            step_size[i][j] = (max_values[j] - min_values[j])*step_size_factor
     while (count <= iterations):
         
         print("Iteration = ", count, " f(x) = ", best_solution[-1])
         position_step = step(position, min_values = min_values, max_values = max_values, step_size = step_size)
-        step_large, position_large_step = large_step(position, min_values = min_values, max_values = max_values, step_size = step_size, count = count, large_step_threshold = large_step_threshold, factor_1 = factor_1, factor_2 = factor_2)
+        step_large, position_large_step = large_step(position, min_values = min_values, max_values = max_values, step_size = step_size, threshold = threshold, large_step_threshold = large_step_threshold, factor_1 = factor_1, factor_2 = factor_2)
         for i in range(position.shape[0]):
             if(position_step.iloc[i,-1] < position.iloc[i,-1] or position_large_step.iloc[i,-1] < position.iloc[i,-1]):
                 if(position_large_step.iloc[i,-1] < position_step.iloc[i,-1]):
                     for j in range(0, position.shape[1]):
                         position.iloc[i,j] = position_large_step.iloc[i,j]
                     for j in range(0, position.shape[1] -1):
-                       step_size[j] = step_large[j]
+                       step_size[i][j] = step_large[i][j]
                 else:
                     for j in range(0, position.shape[1]):
                         position.iloc[i,j] = position_step.iloc[i,j]  
-                threshold = 0
+                threshold[i] = 0
             else:
-                threshold = threshold + 1
-            if (threshold >= improvement_threshold):
-                threshold = 0
+                threshold[i] = threshold[i] + 1
+            if (threshold[i] >= improvement_threshold):
+                threshold[i] = 0
                 for j in range(0, len(min_values)):
-                    step_size[j] = step_size[j]/factor_2
+                    step_size[i][j] = step_size[i][j]/factor_2
                         
         if(position.iloc[position['Fitness'].idxmin(),-1] < best_solution[-1]):
             for j in range(0, position.shape[1]):
@@ -106,7 +111,7 @@ def adaptive_random_search(solutions = 5, min_values = [-5,-5], max_values = [5,
         count = count + 1
         
     print(best_solution)    
-    return best_solution
+    return best_solution, position
 
 ######################## Part 1 - Usage ####################################
 
