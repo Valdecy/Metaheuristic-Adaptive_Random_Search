@@ -48,6 +48,7 @@ def step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0]):
 def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [0,0], count = 0, large_step_threshold = 10, factor_1 = 3, factor_2 = 1.5):
     factor = 0
     position_temp = position.copy(deep = True)
+    step_size_temp = [0]*len(min_values)
     if (count > 0 and count % large_step_threshold == 0):
         factor = factor_1
     else:
@@ -56,8 +57,8 @@ def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [
         step_size[j] = step_size[j]*factor
     for i in range(position.shape[0]):
         for j in range(position.shape[1]-1):
-            minimun = min(min_values[j], position.iloc[i,j] + step_size[j])
-            maximum = max(max_values[j], position.iloc[i,j] - step_size[j])
+            minimun = min(min_values[j], position.iloc[i,j] + step_size_temp[j])
+            maximum = max(max_values[j], position.iloc[i,j] - step_size_temp[j])
             rand = int.from_bytes(os.urandom(8), byteorder = "big") / ((1 << 64) - 1)
             position_temp .iloc[i,j] = minimun + (maximum- minimun)*rand
             if (position_temp .iloc[i,j] > max_values[j]):
@@ -65,7 +66,7 @@ def large_step(position, min_values = [-5,-5], max_values = [5,5], step_size = [
             elif (position_temp .iloc[i,j] < min_values[j]):
                 position_temp .iloc[i,j] = min_values[j]                
         position_temp .iloc[i,-1] = target_function(position_temp .iloc[i,0:position_temp .shape[1]-1]) 
-    return step_size, position_temp 
+    return step_size_temp, position_temp 
 
 # ARS Function
 def adaptive_random_search(solutions = 5, min_values = [-5,-5], max_values = [5,5], step_size_factor = 0.05, factor_1 = 3, factor_2 = 1.5, iterations = 50, large_step_threshold = 10, improvement_threshold = 25):    
